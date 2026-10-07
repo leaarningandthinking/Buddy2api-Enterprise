@@ -1,0 +1,87 @@
+# Python cache/runtime
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local package caches
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+
+# Local environment, secrets, and credentials
+.env
+.env.*
+!.env.example
+*.info
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.token
+*.secret
+*.credential
+*.credentials
+*token*.local
+*secret*.local
+*credential*.local
+secrets/
+credentials/
+.lab-agent/
+
+# Local databases and runtime state
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+buddy2api.db
+codebuddy_gateway.db
+data/
+logs/
+*.log
+
+# Local builds, packages, and exported artifacts
+dist/
+build/
+release/
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+
+# Local-only research/notes/backups
+CHANGELOG.md
+PRODUCT_IMPROVEMENT_DESIGN.md
+codebuddy2openai_鍗忚閫嗗悜瀹屾暣鏂囨。.md
+_mimo-backup-*/
+*.har
+*.pcap
+*.pcapng
+
+# Editor, OS, and temporary files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 本地运行时记忆/产物
+.workbuddy/
+.debug/
+
+# Ant Code composer uploads
+ant-code-uploads/

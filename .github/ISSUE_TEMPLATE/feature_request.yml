@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a Buddy2api workflow improvement
+title: "[Feature]: "
+body:
+  - type: input
+    id: workflow
+    attributes:
+      label: Workflow
+      description: Which local gateway or client-integration task would this improve?
+      placeholder: "For example: account diagnostics or OpenAI-compatible client setup"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the current limitation without exposing account details.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues for a similar request.
+          required: true
+        - label: This request contains no credentials, tokens, API keys, account data, request content, or personal information.
+          required: true
