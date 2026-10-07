@@ -379,13 +379,23 @@ async def list_models(
     except Exception:
         channel = ""
     if channel:
-        scoped = [m for m in data if m.get("channel") == channel]
-        bare = {m["id"] for m in scoped if "/" not in str(m["id"])}
-        # auto 永远是本通道可用模型（路由端绑到 key 的通道），但目录里没有裸 auto 条目
-        if "auto" not in bare:
+        # 按 key 通道过滤后只保留裸 id：带前缀的副本（workbuddy/xxx）在单通道
+        # key 下与裸 id 指向同一模型，只会让客户端选择器出现重复项
+        scoped, seen = [], set()
+        for m in data:
+            if m.get("channel") != channel:
+                continue
+            mid = str(m["id"])
+            inner = mid.split("/", 1)[1] if "/" in mid else mid
+            if inner in seen:
+                continue
+            seen.add(inner)
+            clone = dict(m)
+            clone["id"] = inner
+            scoped.append(clone)
+        if "auto" not in seen:
             scoped.append({"id": "auto", "object": "model", "created": 0,
                            "owned_by": "buddy2api", "channel": channel})
-            bare.add("auto")
         for m in scoped:
             mid = str(m["id"])
             if "/" in mid:
