@@ -368,10 +368,35 @@ async def list_models(
     authorization: str | None = Header(default=None),
     x_api_key: str | None = Header(default=None, alias="X-Api-Key"),
 ):
-    await run_in_threadpool(
+    api_key_info = await run_in_threadpool(
         lambda: _check_client_auth(authorization, x_api_key, consume_quota=False)
     )
-    return {"object": "list", "data": collect_v1_models()}
+    data = collect_v1_models()
+    # 按 key 通道过滤：一把 key 只打一个通道，列表也不该混入其他通道的 id，
+    # 否则客户端的模型发现会选中跨通道 id 触发 key_channel_mismatch。
+    try:
+        channel = router._key_channel(api_key_info)
+    except Exception:
+        channel = ""
+    if channel:
+        scoped = [m for m in data if m.get("channel") == channel]
+        bare = {m["id"] for m in scoped if "/" not in str(m["id"])}
+        # auto 永远是本通道可用模型（路由端绑到 key 的通道），但目录里没有裸 auto 条目
+        if "auto" not in bare:
+            scoped.append({"id": "auto", "object": "model", "created": 0,
+                           "owned_by": "buddy2api", "channel": channel})
+            bare.add("auto")
+        for m in scoped:
+            mid = str(m["id"])
+            if "/" in mid:
+                inner = mid.split("/", 1)[1]
+                if inner not in bare:
+                    clone = dict(m)
+                    clone["id"] = inner
+                    scoped.append(clone)
+                    bare.add(inner)
+        data = scoped
+    return {"object": "list", "data": data}
 
 
 @app.post("/v1/chat/completions")

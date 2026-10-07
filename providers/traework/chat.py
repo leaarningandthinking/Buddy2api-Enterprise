@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import time
 import uuid
 from typing import AsyncGenerator
@@ -37,6 +38,18 @@ def translate_model(model: str) -> str:
             return aliases.resolve(CHANNEL_ID, "auto")
         return ENTERPRISE_DEFAULT_MODEL
     return aliases.resolve(CHANNEL_ID, inner)
+
+
+def _turn_timeout(api_base: str) -> float:
+    # 企业端 solo_work_remote 是完整智能体回合（规划+工具），常超 90s；
+    # 消费端 Lite 回合较快。CB_TRAEWORK_TURN_TIMEOUT 可强制覆盖两端。
+    env = (os.environ.get("CB_TRAEWORK_TURN_TIMEOUT") or "").strip()
+    if env:
+        try:
+            return max(30.0, float(env))
+        except ValueError:
+            pass
+    return 300.0 if api_base.rstrip("/") == ENTERPRISE_AGENT_API.rstrip("/") else 90.0
 
 
 def _route_for(model_inner: str) -> str:
@@ -471,7 +484,8 @@ async def chat_completions(payload: dict, api_key_info: dict | None) -> tuple:
         tried.add(int(account["id"]))
         t0 = time.time()
         try:
-            turn = await _turn(account, prompt, model, api_base=_route_for(model))
+            api_base = _route_for(model)
+            turn = await _turn(account, prompt, model, timeout=_turn_timeout(api_base), api_base=api_base)
             auth_manager.mark_account_success(account["id"])
             _log(
                 api_key_info, account, payload.get("model") or model, stream, "stop", 200, "", t0,
@@ -548,12 +562,13 @@ async def test_chat(account: dict, model: str = "auto", prompt: str = "请回复
     t0 = time.time()
     chosen = translate_model(model or "auto")
     try:
+        route = _route_for(chosen)
         turn = await _turn(
             account,
             prompt or "请回复：pong",
             chosen,
-            timeout=90.0,
-            api_base=_route_for(chosen),
+            timeout=_turn_timeout(route),
+            api_base=route,
         )
         text = turn["text"]
     except TraeWorkAuthError as exc:
